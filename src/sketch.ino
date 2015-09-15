@@ -2,7 +2,7 @@
 
 //First pin being used for floppies, and the last pin.  Used for looping over all pins.
 const byte FIRST_PIN = 2;
-const byte PIN_MAX = 17;
+const byte LAST_PIN = 17;
 #define RESOLUTION 40 //Microsecond resolution for notes
 
 
@@ -46,10 +46,11 @@ unsigned int currentTick[] = {
 
 
 //Setup pins (Even-odd pairs for step control and direction
-void setup(){
-    for(int i=1; i<=8; i++){
-        pinMode(2*i,    OUTPUT); // Step control i
-        pinMode(2*i +1, OUTPUT); // Direction i
+void setup() {
+    //for (int i=1; i<=8; i++) {
+    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
+        pinMode(p,    OUTPUT); // Step control i
+        pinMode(p+1, OUTPUT); // Direction i
     }
 
     Timer1.initialize(RESOLUTION); // Set up a timer at the defined resolution
@@ -61,14 +62,14 @@ void setup(){
 }
 
 
-void loop(){
+void loop() {
     //Only read if we have
-    if (Serial.available() > 2){
+    if (Serial.available() > 2) {
         //Watch for special 100-message to reset the drives
         if (Serial.peek() == 100) {
             resetAll();
             //Flush any remaining messages.
-            while(Serial.available() > 0){
+            while(Serial.available() > 0) {
                 Serial.read();
             }
         }
@@ -82,19 +83,19 @@ void loop(){
 /*
    Called by the timer inturrupt at the specified resolution.
  */
-void tick()
-{
+void tick() {
     /*
        If there is a period set for control pin 2, count the number of
        ticks that pass, and toggle the pin if the current period is reached.
      */
-    for(int i=1; i<=8; i++){
-        int step = 2*i;
-        int direction = 2*i +1;
+    //for (int i=1; i<=8; i++) {
+    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
+        int step = p;
+        int direction = p+1;
 
-        if (currentPeriod[step] > 0){
+        if (currentPeriod[step] > 0) {
             currentTick[step]++;
-            if (currentTick[step] >= currentPeriod[step]){
+            if (currentTick[step] >= currentPeriod[step]) {
                 togglePin(step, direction);
                 currentTick[step]=0;
             }
@@ -103,7 +104,6 @@ void tick()
 }
 
 void togglePin(byte pin, byte direction_pin) {
-
     //Switch directions if end has been reached
     if (currentPosition[pin] >= MAX_POSITION[pin]) {
         currentState[direction_pin] = HIGH;
@@ -115,7 +115,7 @@ void togglePin(byte pin, byte direction_pin) {
     }
 
     //Update currentPosition
-    if (currentState[direction_pin] == HIGH){
+    if (currentState[direction_pin] == HIGH) {
         currentPosition[pin]--;
     }
     else {
@@ -133,17 +133,17 @@ void togglePin(byte pin, byte direction_pin) {
 //
 
 //Not used now, but good for debugging...
-void blinkLED(){
+void blinkLED() {
     digitalWrite(13, HIGH); // set the LED on
     delay(250);              // wait for a second
     digitalWrite(13, LOW);
 }
 
 //For a given controller pin, runs the read-head all the way back to 0
-void reset(byte pin)
-{
+void reset(byte pin) {
     digitalWrite(pin+1,HIGH); // Go in reverse
-    for (byte s=0;s<MAX_POSITION[pin];s+=2){ //Half max because we're stepping directly (no toggle)
+    //Half max because we're stepping directly (no toggle)
+    for (byte s=0;s<MAX_POSITION[pin];s+=2) {
         digitalWrite(pin,HIGH);
         digitalWrite(pin,LOW);
         delay(5);
@@ -154,21 +154,15 @@ void reset(byte pin)
 }
 
 //Resets all the pins
-void resetAll(){
-
-    // Old one-at-a-time reset
-    //for (byte p=FIRST_PIN;p<=PIN_MAX;p+=2){
-    //  reset(p);
-    //}
-
+void resetAll() {
     //Stop all notes (don't want to be playing during/after reset)
-    for (byte p=FIRST_PIN;p<=PIN_MAX;p+=2){
+    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
         currentPeriod[p] = 0; // Stop playing notes
     }
 
     // New all-at-once reset
-    for (byte s=0;s<80;s++){ // For max drive's position
-        for (byte p=FIRST_PIN;p<=PIN_MAX;p+=2){
+    for (byte s=0;s<80;s++) { // For max drive's position
+        for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
             digitalWrite(p+1,HIGH); // Go in reverse
             digitalWrite(p,HIGH);
             digitalWrite(p,LOW);
@@ -176,10 +170,9 @@ void resetAll(){
         delay(5);
     }
 
-    for (byte p=FIRST_PIN;p<=PIN_MAX;p+=2){
+    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
         currentPosition[p] = 0; // We're reset.
         digitalWrite(p+1,LOW);
         currentState[p+1] = 0; // Ready to go forward.
     }
-
 }
