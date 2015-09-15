@@ -49,23 +49,10 @@ unsigned int currentTick[] = {
 
 //Setup pins (Even-odd pairs for step control and direction
 void setup(){
-    pinMode(13, OUTPUT);// Pin 13 has an LED connected on most Arduino boards
-    pinMode(2, OUTPUT); // Step control 1
-    pinMode(3, OUTPUT); // Direction 1
-    pinMode(4, OUTPUT); // Step control 2
-    pinMode(5, OUTPUT); // Direction 2
-    pinMode(6, OUTPUT); // Step control 3
-    pinMode(7, OUTPUT); // Direction 3
-    pinMode(8, OUTPUT); // Step control 4
-    pinMode(9, OUTPUT); // Direction 4
-    pinMode(10, OUTPUT); // Step control 5
-    pinMode(11, OUTPUT); // Direction 5
-    pinMode(12, OUTPUT); // Step control 6
-    pinMode(13, OUTPUT); // Direction 6
-    pinMode(14, OUTPUT); // Step control 7
-    pinMode(15, OUTPUT); // Direction 7
-    pinMode(16, OUTPUT); // Step control 8
-    pinMode(17, OUTPUT); // Direction 8
+    for(int i=1; i<=8; i++){
+        pinMode(2*i,    OUTPUT); // Step control i
+        pinMode(2*i +1, OUTPUT); // Direction i
+    }
 
     Timer1.initialize(RESOLUTION); // Set up a timer at the defined resolution
     Timer1.attachInterrupt(tick); // Attach the tick function
@@ -110,63 +97,18 @@ void tick()
        If there is a period set for control pin 2, count the number of
        ticks that pass, and toggle the pin if the current period is reached.
      */
-    if (currentPeriod[2]>0){
-        currentTick[2]++;
-        if (currentTick[2] >= currentPeriod[2]){
-            togglePin(2,3);
-            currentTick[2]=0;
-        }
-    }
-    if (currentPeriod[4]>0){
-        currentTick[4]++;
-        if (currentTick[4] >= currentPeriod[4]){
-            togglePin(4,5);
-            currentTick[4]=0;
-        }
-    }
-    if (currentPeriod[6]>0){
-        currentTick[6]++;
-        if (currentTick[6] >= currentPeriod[6]){
-            togglePin(6,7);
-            currentTick[6]=0;
-        }
-    }
-    if (currentPeriod[8]>0){
-        currentTick[8]++;
-        if (currentTick[8] >= currentPeriod[8]){
-            togglePin(8,9);
-            currentTick[8]=0;
-        }
-    }
-    if (currentPeriod[10]>0){
-        currentTick[10]++;
-        if (currentTick[10] >= currentPeriod[10]){
-            togglePin(10,11);
-            currentTick[10]=0;
-        }
-    }
-    if (currentPeriod[12]>0){
-        currentTick[12]++;
-        if (currentTick[12] >= currentPeriod[12]){
-            togglePin(12,13);
-            currentTick[12]=0;
-        }
-    }
-    if (currentPeriod[14]>0){
-        currentTick[14]++;
-        if (currentTick[14] >= currentPeriod[14]){
-            togglePin(14,15);
-            currentTick[14]=0;
-        }
-    }
-    if (currentPeriod[16]>0){
-        currentTick[16]++;
-        if (currentTick[16] >= currentPeriod[16]){
-            togglePin(16,17);
-            currentTick[16]=0;
-        }
-    }
+    for(int i=1; i<=8; i++){
+        int step = 2*i;
+        int direction = 2*i +1;
 
+        if (currentPeriod[step] > 0){
+            currentTick[step]++;
+            if (currentTick[step] >= currentPeriod[step]){
+                togglePin(step, direction);
+                currentTick[step]=0;
+            }
+        }
+    }
 }
 
 void togglePin(byte pin, byte direction_pin) {
