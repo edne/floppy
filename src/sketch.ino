@@ -1,7 +1,5 @@
 #include <TimerOne.h>
 
-boolean firstRun = true; // Used for one-run-only stuffs;
-
 //First pin being used for floppies, and the last pin.  Used for looping over all pins.
 const byte FIRST_PIN = 2;
 const byte PIN_MAX = 17;
@@ -58,19 +56,12 @@ void setup(){
     Timer1.attachInterrupt(tick); // Attach the tick function
 
     Serial.begin(9600);
+
+    resetAll();
 }
 
 
 void loop(){
-
-    //The first loop, reset all the drives, and wait 2 seconds...
-    if (firstRun)
-    {
-        firstRun = false;
-        resetAll();
-        delay(2000);
-    }
-
     //Only read if we have
     if (Serial.available() > 2){
         //Watch for special 100-message to reset the drives
