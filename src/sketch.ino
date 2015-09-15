@@ -1,6 +1,6 @@
 #include <TimerOne.h>
 
-#define PIN_LOOP(_var) for(byte _var=2; _var<=17; _var+=2)
+#define PIN_LOOP(_var) for(byte _var=2; _var<=11; _var+=2)
 #define RESOLUTION 40 //Microsecond resolution for notes
 
 
@@ -56,14 +56,17 @@ void setup() {
     Serial.begin(9600);
 
     resetAll();
+    digitalWrite(13, LOW);
 }
 
 
 void loop() {
     //Only read if we have
+
     if (Serial.available() > 2) {
         //Watch for special 100-message to reset the drives
         if (Serial.peek() == 100) {
+            digitalWrite(13, HIGH);
             resetAll();
             //Flush any remaining messages.
             while(Serial.available() > 0) {
@@ -123,31 +126,6 @@ void togglePin(byte pin, byte direction_pin) {
     currentState[pin] = ~currentState[pin];
 }
 
-
-//
-//// UTILITY FUNCTIONS
-//
-
-//Not used now, but good for debugging...
-void blinkLED() {
-    digitalWrite(13, HIGH); // set the LED on
-    delay(250);              // wait for a second
-    digitalWrite(13, LOW);
-}
-
-//For a given controller pin, runs the read-head all the way back to 0
-void reset(byte pin) {
-    digitalWrite(pin+1,HIGH); // Go in reverse
-    //Half max because we're stepping directly (no toggle)
-    for (byte s=0;s<MAX_POSITION[pin];s+=2) {
-        digitalWrite(pin,HIGH);
-        digitalWrite(pin,LOW);
-        delay(5);
-    }
-    currentPosition[pin] = 0; // We're reset.
-    digitalWrite(pin+1,LOW);
-    currentPosition[pin+1] = 0; // Ready to go forward.
-}
 
 //Resets all the pins
 void resetAll() {
