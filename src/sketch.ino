@@ -1,8 +1,6 @@
 #include <TimerOne.h>
 
-//First pin being used for floppies, and the last pin.  Used for looping over all pins.
-const byte FIRST_PIN = 2;
-const byte LAST_PIN = 17;
+#define PIN_LOOP(_var) for(byte _var=2; _var<=17; _var+=2)
 #define RESOLUTION 40 //Microsecond resolution for notes
 
 
@@ -47,9 +45,8 @@ unsigned int currentTick[] = {
 
 //Setup pins (Even-odd pairs for step control and direction
 void setup() {
-    //for (int i=1; i<=8; i++) {
-    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
-        pinMode(p,    OUTPUT); // Step control i
+    PIN_LOOP(p) {
+        pinMode(p,   OUTPUT); // Step control i
         pinMode(p+1, OUTPUT); // Direction i
     }
 
@@ -73,7 +70,7 @@ void loop() {
                 Serial.read();
             }
         }
-        else{
+        else {
             currentPeriod[Serial.read()] = (Serial.read() << 8) | Serial.read();
         }
     }
@@ -88,8 +85,7 @@ void tick() {
        If there is a period set for control pin 2, count the number of
        ticks that pass, and toggle the pin if the current period is reached.
      */
-    //for (int i=1; i<=8; i++) {
-    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
+    PIN_LOOP(p) {
         int step = p;
         int direction = p+1;
 
@@ -156,13 +152,13 @@ void reset(byte pin) {
 //Resets all the pins
 void resetAll() {
     //Stop all notes (don't want to be playing during/after reset)
-    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
+    PIN_LOOP(p) {
         currentPeriod[p] = 0; // Stop playing notes
     }
 
     // New all-at-once reset
     for (byte s=0;s<80;s++) { // For max drive's position
-        for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
+        PIN_LOOP(p) {
             digitalWrite(p+1,HIGH); // Go in reverse
             digitalWrite(p,HIGH);
             digitalWrite(p,LOW);
@@ -170,7 +166,7 @@ void resetAll() {
         delay(5);
     }
 
-    for (byte p=FIRST_PIN;p<=LAST_PIN;p+=2) {
+    PIN_LOOP(p) {
         currentPosition[p] = 0; // We're reset.
         digitalWrite(p+1,LOW);
         currentState[p+1] = 0; // Ready to go forward.
