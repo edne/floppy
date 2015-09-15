@@ -20,24 +20,24 @@ byte MAX_POSITION[] = {
     0,0,158,0,158,0,158,0,158,0,158,0,158,0,158,0,158,0};
 
 //Array to track the current position of each floppy head.  (Only even indexes (i.e. 2,4,6...) are used)
-byte currentPosition[] = {
+byte current_position[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 /*Array to keep track of state of each pin.  Even indexes track the control-pins for toggle purposes.  Odd indexes
   track direction-pins.  LOW = forward, HIGH=reverse
  */
-int currentState[] = {
+int current_state[] = {
     0,0,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW,LOW
 };
 
 //Current period assigned to each pin.  0 = off.  Each period is of the length specified by the RESOLUTION
 //variable above.  i.e. A period of 10 is (RESOLUTION x 10) microseconds long.
-unsigned int currentPeriod[] = {
+unsigned int current_period[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
 //Current tick
-unsigned int currentTick[] = {
+unsigned int current_tick[] = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
 
@@ -55,7 +55,7 @@ void setup() {
 
     Serial.begin(9600);
 
-    resetAll();
+    reset_all();
     digitalWrite(13, LOW);
 }
 
@@ -67,14 +67,14 @@ void loop() {
         //Watch for special 100-message to reset the drives
         if (Serial.peek() == 100) {
             digitalWrite(13, HIGH);
-            resetAll();
+            reset_all();
             //Flush any remaining messages.
             while(Serial.available() > 0) {
                 Serial.read();
             }
         }
         else {
-            currentPeriod[Serial.read()] = (Serial.read() << 8) | Serial.read();
+            current_period[Serial.read()] = (Serial.read() << 8) | Serial.read();
         }
     }
 }
@@ -89,53 +89,50 @@ void tick() {
        ticks that pass, and toggle the pin if the current period is reached.
      */
     PIN_LOOP(p) {
-        int step = p;
-        int direction = p+1;
-
-        if (currentPeriod[step] > 0) {
-            currentTick[step]++;
-            if (currentTick[step] >= currentPeriod[step]) {
-                togglePin(step, direction);
-                currentTick[step]=0;
+        if (current_period[p] > 0) {
+            current_tick[p]++;
+            if (current_tick[p] >= current_period[p]) {
+                toggle_pin(p, p+1);
+                current_tick[p]=0;
             }
         }
     }
 }
 
-void togglePin(byte pin, byte direction_pin) {
+void toggle_pin(byte pin, byte direction) {
     //Switch directions if end has been reached
-    if (currentPosition[pin] >= MAX_POSITION[pin]) {
-        currentState[direction_pin] = HIGH;
-        digitalWrite(direction_pin,HIGH);
+    if (current_position[pin] >= MAX_POSITION[pin]) {
+        current_state[direction] = HIGH;
+        digitalWrite(direction,HIGH);
     }
-    else if (currentPosition[pin] <= 0) {
-        currentState[direction_pin] = LOW;
-        digitalWrite(direction_pin,LOW);
+    else if (current_position[pin] <= 0) {
+        current_state[direction] = LOW;
+        digitalWrite(direction,LOW);
     }
 
-    //Update currentPosition
-    if (currentState[direction_pin] == HIGH) {
-        currentPosition[pin]--;
+    //Update current_position
+    if (current_state[direction] == HIGH) {
+        current_position[pin]--;
     }
     else {
-        currentPosition[pin]++;
+        current_position[pin]++;
     }
 
     //Pulse the control pin
-    digitalWrite(pin,currentState[pin]);
-    currentState[pin] = ~currentState[pin];
+    digitalWrite(pin,current_state[pin]);
+    current_state[pin] = ~current_state[pin];
 }
 
 
 //Resets all the pins
-void resetAll() {
+void reset_all() {
     //Stop all notes (don't want to be playing during/after reset)
     PIN_LOOP(p) {
-        currentPeriod[p] = 0; // Stop playing notes
+        current_period[p] = 0; // Stop playing notes
     }
 
     // New all-at-once reset
-    for (byte s=0;s<80;s++) { // For max drive's position
+    for (byte s=0; s<80;s++) { // For max drive's position
         PIN_LOOP(p) {
             digitalWrite(p+1,HIGH); // Go in reverse
             digitalWrite(p,HIGH);
@@ -145,8 +142,8 @@ void resetAll() {
     }
 
     PIN_LOOP(p) {
-        currentPosition[p] = 0; // We're reset.
+        current_position[p] = 0; // We're reset.
         digitalWrite(p+1,LOW);
-        currentState[p+1] = 0; // Ready to go forward.
+        current_state[p+1] = 0; // Ready to go forward.
     }
 }
