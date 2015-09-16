@@ -20,7 +20,7 @@ byte pin_state[N_PINS];
 // Current period assigned to each pin.  0 = off.
 // Each period is of the length specified by the RESOLUTION
 // variable above.  i.e. A period of 10 is (RESOLUTION x 10) microseconds long.
-byte current_period[N_PINS];
+unsigned int current_period[N_PINS];
 
 // Current tick
 byte current_tick[N_PINS];
