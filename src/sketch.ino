@@ -43,31 +43,16 @@ void setup() {
     Timer1.attachInterrupt(tick);  // Attach the tick function
 
     Serial.begin(9600);
-
-    reset_all();
 }
 
 
 void loop() {
-    // Only read if we have
-
     if (Serial.available() > 2) {
-        // Watch for special 100-message to reset the drives
-        if (Serial.peek() == 100) {
-            reset_all();
-            // Flush any remaining messages.
-            while(Serial.available() > 0) {
-                Serial.read();
-            }
-        }
-        else {
-            current_period[Serial.read()] = (Serial.read() << 8) | Serial.read();
-        }
+        current_period[Serial.read()] = (Serial.read() << 8) | Serial.read();
     }
 }
 
 
-// Called by the timer inturrupt at the specified resolution.
 void tick() {
     // If there is a period set for control pin 2, count the number of
     // ticks that pass, and toggle the pin if the current period is reached.
@@ -103,26 +88,3 @@ void toggle_pin(byte pin, byte direction) {
     write_pin(pin, ~pin_state[pin]);
 }
 
-
-//Resets all the pins
-void reset_all() {
-    // Stop all notes (don't want to be playing during/after reset)
-    PIN_LOOP(p) {
-        current_period[p] = 0; // Stop playing notes
-    }
-
-    // New all-at-once reset
-    for (byte s=0; s<80;s++) { // For max drive's position
-        PIN_LOOP(p) {
-            digitalWrite(p+1, HIGH); // Go in reverse
-            digitalWrite(p, HIGH);
-            digitalWrite(p, LOW);
-        }
-        delay(5);
-    }
-
-    PIN_LOOP(p) {
-        current_position[p] = 0; // We're reset.
-        write_pin(p+1, LOW);
-    }
-}
