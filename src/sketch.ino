@@ -48,7 +48,8 @@ void setup() {
 
 void loop() {
     if (Serial.available() > 2) {
-        current_period[Serial.read()] = (Serial.read() << 8) | Serial.read();
+        byte pin = Serial.read()
+        current_period[pin] = (Serial.read() << 8) | Serial.read();
     }
 }
 
