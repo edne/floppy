@@ -4,7 +4,7 @@
 #define RESOLUTION    40  //Microsecond resolution for notes
 #define MAX_POSITION 158
 
-#define PIN_LOOP(_var) for(byte _var=2; _var<=N_PINS; _var+=2)
+#define PIN_LOOP(_var) for(byte _var=0; _var<=N_PINS; _var+=2)
 
 
 // Array to track the current position of each floppy head.
@@ -17,10 +17,10 @@ byte current_position[N_PINS];
 // LOW = forward, HIGH =reverse
 byte pin_state[N_PINS];
 
-// Current period assigned to each pin.  0 = off.
-// Each period is of the length specified by the RESOLUTION
-// variable above.  i.e. A period of 10 is (RESOLUTION x 10) microseconds long.
-unsigned int current_period[N_PINS];
+// Current semi-period assigned to each pin.  0 = off.
+// Each semi-period is of the length specified by the RESOLUTION
+// variable above.  i.e. A semi-period of 10 is (RESOLUTION x 10) microseconds long.
+unsigned int current_speriod[N_PINS];
 
 // Current tick
 byte current_tick[N_PINS];
@@ -48,19 +48,19 @@ void setup() {
 
 void loop() {
     if (Serial.available() > 2) {
-        byte pin = Serial.read()
-        current_period[pin] = (Serial.read() << 8) | Serial.read();
+        byte pin = Serial.read();
+        current_speriod[pin] = (Serial.read() << 8) | Serial.read();
     }
 }
 
 
 void tick() {
-    // If there is a period set for control pin 2, count the number of
-    // ticks that pass, and toggle the pin if the current period is reached.
+    // If there is a speriod set for control pin 2, count the number of
+    // ticks that pass, and toggle the pin if the current speriod is reached.
     PIN_LOOP(p) {
-        if (current_period[p] > 0) {
+        if (current_speriod[p] > 0) {
             current_tick[p]++;
-            if (current_tick[p] >= current_period[p]) {
+            if (current_tick[p] >= current_speriod[p]) {
                 toggle_pin(p, p+1);
                 current_tick[p] = 0;
             }
