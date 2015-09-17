@@ -48,8 +48,16 @@ void setup() {
 
 void loop() {
     if (Serial.available() > 2) {
-        byte pin = Serial.read();
-        current_speriod[pin] = (Serial.read() << 8) | Serial.read();
+        byte channel = Serial.read();
+        unsigned int speriod = (Serial.read() << 8) | Serial.read();
+        if (channel == 0) {
+            PIN_LOOP(p) {
+                current_speriod[p] = speriod;
+            }
+        }
+        else {
+            current_speriod[channel] = speriod;
+        }
     }
 }
 
